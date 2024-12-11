@@ -3,13 +3,14 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 // cors options
 const corsOptions = {
   origin: [
     "http://localhost:5173",
     "http://localhost:5174",
+    "http://localhost:5175",
     "http://localhost:4173",
     // "https://muhammads-cuisine.web.app",
     // "https://muhammads-cuisine.firebaseapp.com",
@@ -44,16 +45,39 @@ async function run() {
     const db = client.db("shaadbazarbdDB");
 
     const allProducts = db.collection("allProducts");
+    const userCollection = db.collection("users");
+
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+
+      // Authorization check can be added here
+      // if(email !== req.decoded.email){
+      //    return res.status(403).send({message: 'unauthorized access'})
+      // }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user.role === "admin";
+      }
+      res.send({ admin });
+    });
 
     // get all cards data of gallery from database
     app.get("/allProducts", async (req, res) => {
       const search = req.query.search;
-      // console.log(search);
+      const category = req.query.category;
+      console.log("search:", search);
+      console.log("category:", category);
       let query = {};
       if (search) {
-        query = {
-          food_name: { $regex: search, $options: "i" },
-        };
+        query.food_name = { $regex: search, $options: "i" };
+      }
+
+      if (category) {
+        query.category = { $regex: category, $options: "i" };
       }
       // sorting to find top selling foods
       const sort = req.query.sort;
@@ -73,6 +97,14 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await allProducts.findOne(query);
+      res.send(result);
+    });
+
+    // add product from admin and store it in the database
+    app.post("/addProduct", async (req, res) => {
+      const productData = req.body;
+      console.log(productData);
+      const result = await allProducts.insertOne(productData);
       res.send(result);
     });
 
