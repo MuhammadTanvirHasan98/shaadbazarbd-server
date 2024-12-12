@@ -73,7 +73,7 @@ async function run() {
       console.log("category:", category);
       let query = {};
       if (search) {
-        query.food_name = { $regex: search, $options: "i" };
+        query.product_name = { $regex: search, $options: "i" };
       }
 
       if (category) {
@@ -92,7 +92,7 @@ async function run() {
       res.send(result);
     });
 
-    // get single food item data from database
+    // get single product item data from database
     app.get("/product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -105,6 +105,31 @@ async function run() {
       const productData = req.body;
       console.log(productData);
       const result = await allProducts.insertOne(productData);
+      res.send(result);
+    });
+
+    // Update a product of database
+    app.patch("/updateProduct/:id", async (req, res) => {
+      const updateProduct = req.body;
+      const id = req.params.id;
+      console.log("Update product for this id:", id);
+      console.log(updateProduct);
+      const query = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          ...updateProduct,
+        },
+      };
+      const result = await allProducts.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
+    // Delete specific product data from database
+    app.delete("/removeProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("Product delete id:", id);
+      const query = { _id: new ObjectId(id) };
+      const result = await allProducts.deleteOne(query);
       res.send(result);
     });
 
