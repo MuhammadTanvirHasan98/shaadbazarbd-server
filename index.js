@@ -42,7 +42,9 @@ async function run() {
 
     const db = client.db("shaadbazarbdDB");
 
-    const allProducts = db.collection("allProducts");
+    const allProductsCollection = db.collection("allProducts");
+    const wishlistProductsCollection = db.collection("wishlistProducts");
+    const orderCollection = db.collection("orders");
     const userCollection = db.collection("users");
 
     app.get("/admin/:email", async (req, res) => {
@@ -81,7 +83,7 @@ async function run() {
           sort: { purchase_count: -1 },
         };
       }
-      const result = await allProducts.find(query, options).toArray();
+      const result = await allProductsCollection.find(query, options).toArray();
       res.send(result);
     });
 
@@ -89,7 +91,31 @@ async function run() {
     app.get("/product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await allProducts.findOne(query);
+      const result = await allProductsCollection.findOne(query);
+      res.send(result);
+    });
+
+    // get all orders item data from database
+    app.get("/orders", async (req, res) => {
+      const result = await orderCollection.find().toArray();
+      res.send(result);
+    });
+
+    // get wishlist products for each user from database
+    app.get("/wishProducts/:email", async (req, res) => {
+      const user_email = req.params.email;
+      const query = { user_email };
+      console.log(query);
+      const result = await wishlistProductsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get order items by specific email from database
+    app.get("/orders/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      console.log(query);
+      const result = await orderCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -97,7 +123,23 @@ async function run() {
     app.post("/addProduct", async (req, res) => {
       const productData = req.body;
       console.log(productData);
-      const result = await allProducts.insertOne(productData);
+      const result = await allProductsCollection.insertOne(productData);
+      res.send(result);
+    });
+
+    // add product to the wishlist from user to the database
+    app.post("/addWishProduct", async (req, res) => {
+      const wishProduct = req.body;
+      console.log(wishProduct);
+      const result = await wishlistProductsCollection.insertOne(wishProduct);
+      res.send(result);
+    });
+
+    // add order by placing order from the users and save to the database
+    app.post("/placeOrder", async (req, res) => {
+      const orderDetails = req.body;
+      console.log(orderDetails);
+      const result = await orderCollection.insertOne(orderDetails);
       res.send(result);
     });
 
@@ -113,7 +155,17 @@ async function run() {
           ...updateProduct,
         },
       };
-      const result = await allProducts.updateOne(query, updatedDoc);
+      const result = await allProductsCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
+    // Delete specific wish data from database
+    app.delete("/wish/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("Product delete id:", id);
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistProductsCollection.deleteOne(query);
+      console.log(result);
       res.send(result);
     });
 
@@ -122,7 +174,7 @@ async function run() {
       const id = req.params.id;
       console.log("Product delete id:", id);
       const query = { _id: new ObjectId(id) };
-      const result = await allProducts.deleteOne(query);
+      const result = await allProductsCollection.deleteOne(query);
       res.send(result);
     });
 
@@ -137,7 +189,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Shaadbazar BD server is running here!");
 });
 
 app.listen(port, () => {
