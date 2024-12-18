@@ -12,7 +12,7 @@ const corsOptions = {
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:4173",
-    "https://shaadbazar.netlify.app",
+    "https://shaadbazarbd.netlify.app",
     // "https://muhammads-cuisine.web.app",
     // "https://muhammads-cuisine.firebaseapp.com",
     // "https://shaadbazarbd.netlify.app",
